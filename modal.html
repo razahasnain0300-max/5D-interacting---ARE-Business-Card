@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Amaken — Interactive Business Card (image fix)</title>
+  <link rel="shortcut icon" href="images/amaken.png" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    /* (kept layout & styles minimal / same idea) */
+    :root{ --bg:#0f395d; --text:#eaf6ff; --muted:#9fc9dd; --accent:#00bcd4; --ui-bg: rgba(255,255,255,0.06); --glass-border: rgba(255,255,255,0.08); --radius:12px; }
+    html{font-size:14px} body{margin:0;height:100vh;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Roboto,Arial}
+    .page{display:grid;grid-template-columns:1fr 320px;gap:18px;padding:18px;height:100%}
+    .canvas-wrap{border-radius:12px; overflow:hidden; background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent); display:flex;align-items:center;justify-content:center; position:relative}
+    .side{padding:14px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));}
+    .btn{appearance:none;border:0;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.03);color:var(--text);cursor:pointer}
+    #toast{position:fixed;right:18px;bottom:18px;background:rgba(2,8,14,0.85);padding:10px 12px;border-radius:8px;opacity:0;transition:opacity .2s}
+    #toast.show{opacity:1}
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="canvas-wrap" id="canvasWrap" aria-label="3D preview">
+      <!-- renderer will be appended here -->
+    </div>
+
+    <aside class="side">
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px">
+        <img src="images/amaken.png" alt="" style="width:48px;height:48px;border-radius:8px;object-fit:cover">
+        <div>
+          <div style="font-weight:800">Amaken Real Estate Brokers</div>
+          <div style="color:var(--muted);font-size:13px">Interactive Preview</div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button id="btnUpload" class="btn"><i class="fa-solid fa-upload"></i> Upload image (local)</button>
+        <button id="btnUseDefault" class="btn"><i class="fa-solid fa-image"></i> Use images/amaken.png</button>
+        <label style="font-size:13px;color:var(--muted)">Floating cubes:</label>
+        <input id="shapeCount" type="range" min="12" max="420" step="4" value="96">
+      </div>
+
+      <!-- hidden file input -->
+      <input id="imageFileInput" type="file" accept="image/*" style="display:none" />
+    </aside>
+  </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js';
+
+    // --- constants & defaults ---
+    const DEFAULT_META = {
+      name:'Amaken Real Estate Brokers',
+      image: 'images/amaken.png'
+    };
+
+    // DOM
+    const wrap = document.getElementById('canvasWrap');
+    const toastEl = document.getElementById('toast');
+    const btnUpload = document.getElementById('btnUpload');
+    const btnUseDefault = document.getElementById('btnUseDefault');
+    const imgFileInput = document.getElementById('imageFileInput');
+    const shapeCount = document.getElementById('shapeCount');
+
+    function showToast(msg, ms = 1800){
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(toastEl._t);
+      toastEl._t = setTimeout(()=> toastEl.classList.remove('show'), ms);
+      console.log('[toast]', msg);
+    }
+
+    // THREE renderer + scene
+    const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+    renderer.setSize(wrap.clientWidth, wrap.clientHeight, false);
+    renderer.domElement.style.display = 'block';
+    wrap.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, wrap.clientWidth / wrap.clientHeight, 0.1, 1000);
+    camera.position.set(0,0,18);
+
+    const light = new THREE.DirectionalLight(0xffffff, 0.9); light.position.set(5,5,10); scene.add(light);
+    scene.add(new THREE.AmbientLight(0x666666, 0.5));
+
+    // boundary (visual)
+    const BIG_CUBE_SIZE = 8.2;
+    const edges = new THREE.EdgesGeometry(new THREE.BoxGeometry(BIG_CUBE_SIZE,BIG_CUBE_SIZE,BIG_CUBE_SIZE));
+    const boundary = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color:0x9fefff, transparent:true, opacity:0.08 }));
+    scene.add(boundary);
+
+    // small cubes
+    let smallGroup = new THREE.Group(); scene.add(smallGroup);
+    function buildSmallCubes(count){
+      // dispose
+      smallGroup.children.slice().forEach(m => { smallGroup.remove(m); m.geometry?.dispose?.(); m.material?.dispose?.(); });
+      smallGroup = new THREE.Group(); scene.add(smallGroup);
+      for(let i=0;i<count;i++){
+        const s = 0.08 + Math.random()*0.14;
+        const geom = new THREE.BoxGeometry(s,s,s);
+        const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(0.55 + Math.random()*0.2, 0.6, 0.5), roughness:0.4, metalness:0.02 });
+        const m = new THREE.Mesh(geom, mat);
+        m.position.set((Math.random()-0.5)*20, (Math.random()-0.5)*12, (Math.random()-0.5)*18);
+        m.userData = { basePos: m.position.clone(), speed:0.3 + Math.random()*1.0, angle: Math.random()*Math.PI*2, radius: 0.2 + Math.random()*6, rotSpeed:(Math.random()*0.02-0.01) };
+        smallGroup.add(m);
+      }
+    }
+    buildSmallCubes(parseInt(shapeCount.value,10) || 96);
+    shapeCount.addEventListener('input', e => buildSmallCubes(parseInt(e.target.value,10)));
+
+    // info cubes group
+    const infoGroup = new THREE.Group(); scene.add(infoGroup);
+    const INFO_TYPES = ['image','name','title','phone','email','website','address','notes'];
+    let infoCubes = [];
+
+    // medium cube
+    let mediumCube = null;
+
+    // we'll keep references of face canvases to update textures after an image load
+    const canvasTextureRegistry = []; // { canvas, texture }
+
+    // helper to draw image cover into canvas
+    function drawImageCover(ctx, img, x, y, w, h){
+      const iw = img.naturalWidth || img.width || img.width;
+      const ih = img.naturalHeight || img.height || img.height;
+      if(!iw || !ih){ ctx.drawImage(img, x, y, w, h); return; }
+      const r = Math.max(w/iw, h/ih);
+      const nw = iw * r, nh = ih * r;
+      const cx = (nw - w)/2, cy = (nh - h)/2;
+      ctx.drawImage(img, -cx + x, -cy + y, nw, nh);
+    }
+
+    // create a face canvas (if type === 'image' we leave a placeholder — will be updated by updateCanvasesWithImage)
+    function makeFaceCanvasForType(type, meta, size=1024){
+      const c = document.createElement('canvas');
+      c.width = size; c.height = size;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#071827'; ctx.fillRect(0,0,size,size);
+
+      if(type === 'image'){
+        const pad = Math.floor(size * 0.06);
+        const imgSize = size - pad*2;
+        ctx.fillStyle = '#0b2533';
+        // rounded-ish rect (simple)
+        ctx.fillRect(pad, pad, imgSize, imgSize);
+        // placeholder text until image drawn
+        ctx.fillStyle = '#eaf6ff';
+        ctx.font = '700 36px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Loading…', size/2, size/2);
+      } else {
+        ctx.fillStyle = '#eaf6ff';
+        ctx.textAlign = 'center';
+        if(type === 'name'){ ctx.font='800 48px Inter, sans-serif'; ctx.fillText(meta.name||'', size/2, size/2); }
+        else if(type === 'title'){ ctx.font='700 20px Inter, sans-serif'; ctx.fillText(meta.title||'', size/2, size/2); }
+        else { ctx.font='600 20px Inter, sans-serif'; ctx.fillText((meta[type]||''), size/2, size/2); }
+      }
+      return c;
+    }
+
+    // build info cubes (textures will be canvas textures)
+    function buildInfoCubes(count, meta = DEFAULT_META){
+      // cleanup
+      infoGroup.children.slice().forEach(m=>{ infoGroup.remove(m); m.geometry?.dispose?.(); if(m.material){ if(Array.isArray(m.material)) m.material.forEach(mat=> mat.map?.dispose?.()); else m.material.map?.dispose?.(); } });
+      infoCubes = [];
+
+      const size = 1.4;
+      for(let i=0;i<count;i++){
+        const type = INFO_TYPES[i % INFO_TYPES.length];
+        const faceCanvas = makeFaceCanvasForType(type, meta, 1024);
+        const tex = new THREE.CanvasTexture(faceCanvas);
+        tex.encoding = THREE.sRGBEncoding;
+        tex.minFilter = THREE.LinearFilter;
+        tex.needsUpdate = true;
+
+        // register for updates if it's an image face
+        canvasTextureRegistry.push({ canvas: faceCanvas, texture: tex, type });
+
+        const materials = [];
+        for(let f=0; f<6; f++){
+          materials.push(new THREE.MeshPhysicalMaterial({ map: tex, roughness:0.25, metalness:0.02 }));
+        }
+        const geom = new THREE.BoxGeometry(size,size,size);
+        const mesh = new THREE.Mesh(geom, materials);
+        const spread = BIG_CUBE_SIZE * 0.45;
+        mesh.position.set((Math.random()-0.5)*spread, (Math.random()-0.5)*spread, (Math.random()-0.5)*spread);
+        mesh.userData = { meta:{type, ...meta}, basePos:mesh.position.clone(), rotSpeed:(Math.random()*0.01 - 0.005) };
+        infoGroup.add(mesh);
+        infoCubes.push(mesh);
+      }
+    }
+
+    // build medium cube (larger)
+    function buildMediumCube(meta = DEFAULT_META){
+      if(mediumCube){ scene.remove(mediumCube); mediumCube.geometry?.dispose?.(); if(Array.isArray(mediumCube.material)) mediumCube.material.forEach(m=>m.map?.dispose?.()); mediumCube = null; }
+      const faceCanvas = makeFaceCanvasForType('image', meta, 2048);
+      const tex = new THREE.CanvasTexture(faceCanvas);
+      tex.encoding = THREE.sRGBEncoding;
+      tex.minFilter = THREE.LinearFilter;
+      tex.needsUpdate = true;
+      canvasTextureRegistry.push({ canvas: faceCanvas, texture: tex, type:'image' });
+
+      const mats = [];
+      for(let i=0;i<6;i++) mats.push(new THREE.MeshPhysicalMaterial({ map: tex, roughness:0.35, metalness:0.04 }));
+      const geom = new THREE.BoxGeometry(3.2,3.2,3.2);
+      mediumCube = new THREE.Mesh(geom, mats);
+      mediumCube.position.set(0,0,0);
+      mediumCube.userData = { meta:{...meta}, rotSpeed:0.001, orbitSpeed:0.02, bobSpeed:0.6, bobHeight:0.12, radius:0.12, zAmp:0.08, angle:Math.random()*Math.PI*2 };
+      scene.add(mediumCube);
+    }
+
+    // ---- robust image preload that works with CORS or local file (via createImageBitmap or Image element) ----
+    async function preloadExternalImage(url){
+      // Try fetch + createImageBitmap (best if CORS allowed)
+      try {
+        console.log('Attempting fetch() for', url);
+        const resp = await fetch(url, { mode:'cors' }); // will fail if blocked
+        if(!resp.ok) throw new Error('fetch failed: ' + resp.status);
+        const blob = await resp.blob();
+        // createImageBitmap yields an ImageBitmap (fast)
+        const bitmap = await createImageBitmap(blob);
+        console.log('createImageBitmap succeeded for', url);
+        return bitmap; // treat bitmap as drawable by drawImage
+      } catch (err) {
+        console.warn('fetch/createImageBitmap failed — falling back to Image element:', err);
+        // fallback: HTMLImageElement with crossOrigin (still requires CORS if remote)
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous'; // try anonymous; if server doesn't allow it, it will still error on draw with tainting
+          img.onload = () => { console.log('Image element loaded', url); resolve(img); };
+          img.onerror = (e) => { console.error('Image element failed to load', url, e); reject(e); };
+          img.src = url;
+        });
+      }
+    }
+
+    // Update all registered canvases that are type 'image' with the loaded image (ImageBitmap or HTMLImageElement)
+    function updateCanvasesWithImage(imgLike){
+      if(!imgLike) { console.warn('No image to draw into canvases'); return; }
+      let updated = 0;
+      canvasTextureRegistry.forEach(entry => {
+        if(entry.type === 'image'){
+          const c = entry.canvas;
+          const ctx = c.getContext('2d');
+          const size = c.width;
+          const pad = Math.floor(size * 0.06);
+          const imgSize = size - pad*2;
+          // redraw background/rounded rect
+          ctx.fillStyle = '#071827'; ctx.fillRect(0,0,size,size);
+          ctx.fillStyle = '#0b2533'; ctx.fillRect(pad, pad, imgSize, imgSize);
+          try {
+            // for ImageBitmap and HTMLImageElement draw works same way
+            drawImageCover(ctx, imgLike, pad, pad, imgSize, imgSize);
+          } catch (err) {
+            console.warn('drawImageCover failed for one canvas, attempting basic draw:', err);
+            try { ctx.drawImage(imgLike, pad, pad, imgSize, imgSize); } catch(e){ console.error('drawImage fallback failed', e); }
+          }
+          // mark texture for GPU update
+          if(entry.texture){ entry.texture.needsUpdate = true; updated++; }
+        }
+      });
+      console.log('Updated canvases with image:', updated);
+      showToast(`Image applied to ${updated} canvas(es)`);
+    }
+
+    // attempt to load default image (images/amaken.png) and apply to cubes
+    async function loadAndApplyDefaultImage(url = DEFAULT_META.image){
+      showToast('Loading image...');
+      try{
+        const imgLike = await preloadExternalImage(url); // ImageBitmap or HTMLImageElement
+        updateCanvasesWithImage(imgLike);
+      } catch(err){
+        console.error('Default image load failed:', err);
+        showToast('Image load failed — check console for details');
+      }
+    }
+
+    // Build whole scene initially
+    function buildScene(){
+      buildInfoCubes(12, DEFAULT_META);
+      buildMediumCube(DEFAULT_META);
+      // try to load default image and update canvases once loaded
+      loadAndApplyDefaultImage(DEFAULT_META.image).catch(()=>{ /* already handled */ });
+    }
+    buildScene();
+
+    // animation loop
+    function animate(){
+      const now = performance.now();
+      // small cubes animate
+      smallGroup.children.forEach(c => {
+        const d = c.userData;
+        c.rotation.x += d.rotSpeed * 0.9;
+        c.rotation.y += d.rotSpeed * 1.1;
+        c.position.x = d.basePos.x + Math.cos((now*0.001)*d.speed + d.angle) * d.radius * 0.9;
+        c.position.y = d.basePos.y + Math.sin((now*0.001)*(d.speed*0.8) + d.angle*0.5) * (d.radius*0.6);
+      });
+      // info cubes float/rotate
+      infoGroup.children.forEach((m, idx) => {
+        const d = m.userData;
+        m.rotation.x += d.rotSpeed * 0.8;
+        m.rotation.y += d.rotSpeed * 0.9;
+        m.position.x = d.basePos.x + Math.sin(now*0.0004 + idx) * 0.18;
+        m.position.y = d.basePos.y + Math.cos(now*0.0006 + idx*1.2) * 0.14;
+        m.position.z = d.basePos.z + Math.sin(now*0.0005 + idx*0.4) * 0.12;
+      });
+      // medium cube subtle motion
+      if(mediumCube){
+        const md = mediumCube.userData;
+        mediumCube.rotation.x += md.rotSpeed * 0.6;
+        mediumCube.rotation.y += md.rotSpeed * 0.8;
+        const t = now * 0.001;
+        const angle = t * md.orbitSpeed + (md.angle || 0);
+        mediumCube.position.x = Math.cos(angle) * md.radius;
+        mediumCube.position.y = Math.sin(t * md.bobSpeed + ((md.angle||0)*0.5)) * md.bobHeight;
+        mediumCube.position.z = Math.sin(angle * 0.5) * md.zAmp;
+      }
+
+      boundary.rotation.y += 0.0012;
+      boundary.rotation.x += 0.0006;
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+
+    // wire upload button
+    btnUpload.addEventListener('click', ()=> imgFileInput.click());
+    imgFileInput.addEventListener('change', async (ev) => {
+      const file = ev.target.files && ev.target.files[0];
+      if(!file) return;
+      try{
+        showToast('Reading local file...');
+        const bitmap = await createImageBitmap(file);
+        // update ALL canvases immediately with the user-selected image
+        updateCanvasesWithImage(bitmap);
+        showToast('Local image applied');
+      } catch(err){
+        console.error('Local file -> createImageBitmap failed', err);
+        // fallback: read as dataURL and create Image element
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => { updateCanvasesWithImage(img); showToast('Local image applied'); };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      }
+      imgFileInput.value = ''; // reset
+    });
+
+    // try using default file button (re-run load/apply)
+    btnUseDefault.addEventListener('click', ()=> loadAndApplyDefaultImage(DEFAULT_META.image));
+
+    // resize handling
+    function resize(){ renderer.setSize(wrap.clientWidth, wrap.clientHeight, false); camera.aspect = wrap.clientWidth / wrap.clientHeight; camera.updateProjectionMatrix(); }
+    window.addEventListener('resize', ()=> { clearTimeout(window._resize_t); window._resize_t = setTimeout(resize,80); });
+    resize();
+
+    // Helpful console hint
+    console.info('Image loader debug: if images/amaken.png is remote, server must return Access-Control-Allow-Origin to allow draw/read. If you are testing via file://, run a local server (e.g. python -m http.server).');
+
+  </script>
+</body>
+</html>

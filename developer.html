@@ -1,0 +1,1384 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Syed Hasnain Raza | Developer— 5D | Interactive Business Card</title>
+  <link rel="shortcut icon" href="images/amaken.png" type="image/x-icon">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    #name{
+      display: none;
+    }
+    a{
+      text-decoration: none;
+    }
+    :root {
+      --bg: #0f395d;
+      --text: #eaf6ff;
+      --muted: #9fc9dd;
+      --accent: #00bcd4;
+      --ui-bg: rgba(255, 255, 255, 0.06);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --toast-bg: rgba(2, 8, 14, 0.85);
+      --radius: 12px;
+    }
+
+    html {
+      font-size: 14px
+    }
+
+    @media(min-width:1000px) {
+      html {
+        font-size: 15px
+      }
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      color: var(--text);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* background video */
+    #bgVideo {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.12
+    }
+
+    /* layout */
+    .page {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: clamp(12px, 2.2vw, 28px);
+      padding: clamp(16px, 4vw, 72px);
+      box-sizing: border-box;
+      align-items: start;
+      min-height: 100vh
+    }
+
+    @media(max-width:1000px) {
+      .page {
+        grid-template-columns: 1fr;
+        padding: 18px 14px
+      }
+
+      .side {
+        order: 2
+      }
+    }
+
+    .canvas-wrap {
+      position: relative;
+      width: 100%;
+      height: clamp(320px, 62vh, 72vh);
+      min-height: 320px;
+      border-radius: 18px;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.01), transparent);
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mobile-detail-btn {
+      display: none;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 18px;
+      background: linear-gradient(90deg, var(--accent), #6fe8ff);
+      color: #012;
+      border: 0;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-weight: 700;
+      z-index: 30;
+      box-shadow: 0 12px 34px rgba(0, 0, 0, 0.4);
+      cursor: pointer;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    @media(max-width:700px) {
+      .mobile-detail-btn {
+        display: inline-flex
+      }
+    }
+
+    .side {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+      border-radius: var(--radius);
+      padding: clamp(12px, 2.2vw, 18px);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 10px 40px rgba(2, 8, 14, 0.4)
+    }
+
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 8px
+    }
+
+    .logo {
+      width: clamp(44px, 5.2vw, 60px);
+      height: clamp(44px, 5.2vw, 60px);
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), #f6c84c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden
+    }
+
+    .title {
+      font-weight: 800;
+      font-size: clamp(15px, 1.6vw, 16px)
+    }
+
+    .muted {
+      color: var(--muted)
+    }
+
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 12px
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap
+    }
+
+    .btn {
+      appearance: none;
+      border: 0;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 700;
+      display: inline-flex;
+      gap: 8px;
+      align-items: center
+    }
+
+    .btn.primary {
+      background: linear-gradient(90deg, var(--accent), #6fe8ff);
+      color: #012
+    }
+
+    .muted-sm {
+      color: var(--muted);
+      font-size: 0.85rem
+    }
+
+    .table-responsive {
+      width: 71%;
+      margin-top: clamp(12px, 2vh, 24px);
+      border-radius: 12px;
+      overflow: auto;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.01), transparent);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      box-shadow: 0 18px 48px rgba(2, 8, 14, 0.18);
+      padding: 8px;
+      grid-column: 1 / -1
+    }
+
+    table.canvas-table {
+      width: 100%;
+      border-collapse: collapse;
+      color: var(--text);
+      table-layout: fixed
+    }
+
+    .canvas-table thead th {
+      position: sticky;
+      top: 0;
+      background: linear-gradient(180deg, rgba(2, 8, 14, 0.72), rgba(2, 8, 14, 0.78));
+      padding: 12px 14px;
+      font-weight: 700;
+      color: var(--muted);
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03)
+    }
+
+    .canvas-table tbody td {
+      padding: 12px 14px;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.02);
+      vertical-align: middle;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    /* Responsive wrapper */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      /* allows horizontal scroll */
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Table styling */
+    .canvas-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: auto;
+      /* columns adjust to content */
+    }
+
+    .canvas-table th,
+    .canvas-table td {
+      padding: 12px 15px;
+      text-align: left;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      white-space: nowrap;
+      /* prevent wrapping */
+    }
+
+    /* Optional: shrink font for small screens */
+    @media (max-width: 600px) {
+
+      .canvas-table th,
+      .canvas-table td {
+        padding: 8px 10px;
+        font-size: 0.85rem;
+      }
+    }
+
+    .canvas-table thead th:nth-child(1),
+    .canvas-table thead th:nth-child(4),
+    .canvas-table tbody td:nth-child(1),
+    .canvas-table tbody td:nth-child(4) {
+      display: none;
+    }
+
+
+    #projectorOverlay {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(.98);
+      width: min(920px, 94vw);
+      max-height: 85vh;
+      display: none;
+      z-index: 90;
+      background: var(--ui-bg);
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: 0 30px 120px rgba(2, 8, 14, 0.6);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(10px) saturate(120%);
+      overflow: auto;
+      gap: 22px;
+      align-items: flex-start;
+      transition: all .22s ease;
+      flex-direction: row;
+    }
+
+    #projectorOverlay.show {
+      display: flex;
+      animation: overlayIn .28s cubic-bezier(.2, .9, .2, 1) forwards;
+    }
+
+    @keyframes overlayIn {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(.94)
+      }
+
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(.98)
+      }
+    }
+
+    #projectorOverlay .left {
+      width: 42%;
+      min-width: 260px
+    }
+
+    #projectorOverlay img {
+      width: 100%;
+      height: auto;
+      max-height: 300px;
+      border-radius: 12px;
+      object-fit: cover;
+      display: block;
+      box-shadow: 0 18px 48px rgba(2, 8, 14, 0.12)
+    }
+
+    #projectorOverlay .right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px
+    }
+
+    #projClose {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.02);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 18px
+    }
+
+    .details {
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+
+    .detail-row {
+      display: flex;
+      /* gap: 8px; */
+      align-items: center;
+      font-size: 14px
+    }
+
+    .detail-row .label {
+      color: var(--muted);
+      font-weight: 600;
+      min-width: 78px;
+      color:rgb(87, 78, 78);
+    }
+
+    .detail-row .value {
+      font-weight: 600;
+      flex: 1
+    }
+
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      background-color: white;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      margin-left: 8px;
+      color:black;
+      font-weight: 900px;
+      text-decoration: none;
+    }
+
+    @media (max-width:700px) {
+      #projectorOverlay {
+        flex-direction: column;
+        padding: 16px;
+        width: 92vw;
+        max-height: 92vh
+      }
+
+      #projectorOverlay .left {
+        width: 100%
+      }
+
+      #projectorOverlay img {
+        max-height: 40vh
+      }
+    }
+
+    #tooltip {
+      position: fixed;
+      display: none;
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      z-index: 120;
+      max-width: 420px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--glass-border)
+    }
+
+    #tooltip .t-name {
+      font-weight: 800;
+      margin-bottom: 6px;
+      display: block
+    }
+
+    #tooltip .t-title {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+      display: block
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: var(--toast-bg);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 10px;
+      box-shadow: 0 12px 36px rgba(2, 8, 14, 0.5);
+      z-index: 130;
+      transform: translateY(12px);
+      opacity: 0;
+      transition: transform .24s ease, opacity .24s ease;
+      font-size: 14px
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1
+    }
+
+    footer.note {
+      position: fixed;
+      left: 18px;
+      bottom: 18px;
+      color: var(--muted);
+      font-size: 13px;
+      z-index: 10
+    }
+
+    #detailModalBackdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      align-items: center;
+      justify-content: center;
+      background: rgba(2, 8, 14, 0.6);
+      z-index: 200;
+      padding: 18px;
+      overflow: auto
+    }
+
+    #detailModalBackdrop .modal {
+      max-height: 90vh
+    }
+    @media(min-width:350px) and (max-width:780px){
+        b{
+            font-size: 12px;
+        }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Hidden DOM image for cube texture. Put crossorigin attribute here BEFORE browser fetches image. -->
+  <img id="cubeImage" crossorigin="anonymous" src="images/hasnain.jpeg" alt="Amaken logo for cube"
+    style="display:none;width:1px;height:1px;visibility:hidden">
+
+  <!-- Background video (kept intact). Add crossorigin attribute to help when remote -->
+  <video id="bgVideo" class="bg-video" autoplay muted loop playsinline crossorigin="anonymous" src="images/bg.mp4"
+    aria-hidden="true"></video>
+    <b style="text-align: center;font-size: 18px;">Digital Business Card - <a href="http://amaken-realestate.com" style="color: rgb(123, 119, 228);">Amaken Real Estate Brokers</a></b>
+
+  <div class="page">
+    <div class="canvas-wrap" id="canvasWrap" aria-label="3D business card preview">
+      <button id="mobileDetailBtn" class="mobile-detail-btn" aria-hidden="true"><i
+          class="fa-solid fa-rectangle-list"></i> See details</button>
+    </div>
+
+    <aside class="side" aria-labelledby="cardInfo">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"><a href="http://syedhasnain-portfolio.netlify.app/"><img src="images/hasnain.jpeg" alt=""
+            style="width:100%;height:100%;object-fit:cover"></a></div>
+        <div>
+          <div class="title" id="cardInfo"><a href="http://syedhasnain-portfolio.netlify.app/"style="Color: lightblue;">Syed Hasnain Raza</a></div>
+          <div class="muted">"Your Vision, My Code</div>
+        </div>
+      </div>
+
+      <div class="controls" role="region" aria-label="Card controls">
+        <div class="row">
+          <button id="exportHiDPI" class="btn" title="Export HiDPI"><i
+              class="fa-solid fa-up-right-and-down-left-from-center"></i> Export @2x</button>
+          <button id="downloadVcard" class="btn primary" title="Download & Share vCard"><i
+              class="fa-regular fa-address-card"></i> vCard</button>
+        </div>
+
+        <div class="control-group">
+          <label for="shapeCount">Floating cubes (count)</label>
+          <div class="row">
+            <input id="shapeCount" class="range" type="range" min="12" max="420" step="4" value="96">
+            <div id="shapeCountVal" class="muted-sm">96</div>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label>Effects</label>
+          <div class="row chips">
+            <label class="chip"><input id="mergeToggle" type="checkbox" checked
+                style="margin-right:8px">Auto-merge</label>
+            <label class="chip"><input id="particlesToggle" type="checkbox" checked
+                style="margin-right:8px">Particles</label>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label for="accent">Accent color</label>
+          <div class="row">
+            <input id="accent" type="color" value="#00bcd4">
+            <div class="muted-sm">Brand accent</div>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label>Theme</label>
+          <div class="row">
+            <button id="themeToggle" class="chip" aria-pressed="false">Switch to Light</button>
+            <div class="muted-sm">Toggle light / dark</div>
+          </div>
+        </div>
+
+        <div class="muted-sm">Tip: Hover cubes to see quick contact info and open the full overlay. Click a cube (or use
+          the mobile button) to open full details.</div>
+      </div>
+      <div class="table-responsive" aria-label="Profiles table">
+      <table class="canvas-table" id="profilesTable" role="table" aria-label="Profiles table">
+       
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td id="name">Amaken Real Estate Brokers</td>
+            <td>Company Profile</td>
+            <td>Amaken Real Estate Brokers</td>
+            <td><a href="index.html" class="btn">Visit Profile</a></td>
+          </tr>
+           <tr>
+            <td>2</td>
+            <td id="name">Syed Hasnain Raza</td>
+            <td>CEO</td>
+            <td>Amaken Real Estate Brokers</td>
+            <td><a href="ceo.html" class="btn">Visit Profile</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </aside>
+
+    
+  </div>
+
+  <!-- Projector overlay (hidden by default) -->
+  <div id="projectorOverlay" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="left">
+      <img id="projImage" src="images/hasnain.jpeg" alt="Profile image">
+    </div>
+    <div class="right">
+      <div style="display:flex;justify-content:space-between;align-items:start">
+        <div>
+          <h3 id="projName">Syed Hasnain Raza</h3>
+          <div id="projTitle" style="Color:rgb(87, 78, 78)">"Your Vision, My Code</div>
+        </div>
+      </div>
+
+      <p id="projText" class="muted-sm" style="cursor:pointer;color:rgb(87, 78, 78);background-color: white;" title="Click for more details">Loading…</p>
+
+      <div class="details" aria-live="polite">
+        <div class="detail-row">
+          <div class="label">Phone/WhatsApp</div>
+          <div class="value" id="projPhone">+923161003996</div>
+          <button class="icon-btn" id="iconPhone" title="Call / Copy"><i class="fa-solid fa-phone"></i></button>
+        </div>
+
+        <div class="detail-row" style="display:none">
+          <div class="label">WhatsApp</div>
+          <div class="value" id="projWhatsapp">+923161003996</div>
+          <button class="icon-btn" id="iconWa" title="WhatsApp / Copy"><i class="fa-brands fa-whatsapp"></i></button>
+        </div>
+
+        <div class="detail-row">
+          <div class="label">Email</div>
+          <div class="value" id="projEmail">razahasnain0300@gmail.com</div>
+          <button class="icon-btn" id="iconMail" title="Email / Copy"><i class="fa-regular fa-envelope"></i></button>
+        </div>
+
+        <div class="detail-row">
+          <div class="label">Portfolio</div>
+          <div class="value" id="projWebsite">http://syedhasnain-portfolio.netlify.app/</div>
+          <a class="icon-btn" id="iconWeb" href="#" target="_blank" rel="noopener" title="Open website"><i
+              class="fa-solid fa-link"></i></a>
+        </div>
+
+        <div class="detail-row">
+          <div class="label">Address</div>
+          <div class="value" id="projAddress">Al Reem Tower 3rd Floor Office 1301 Dubai UAE</div>
+          <button class="icon-btn" id="iconMap" title="Open Map / Copy"><i
+              class="fa-solid fa-location-dot"></i></button>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+        <a id="callBtn" class="btn" style="display:none" href="tel:
++923161003996"><i class="fa-solid fa-phone"></i> Call</a>
+        <a id="waBtn" class="btn" style="display:none" href="https://wa.me/971564924444" target="_blank" rel="noopener"><i
+            class="fa-brands fa-whatsapp"></i> WhatsApp</a>
+        <a id="mailBtn" class="btn" style="display:none" href="mailto:razahasnain0300@gmail.com"><i class="fa-regular fa-envelope"></i>
+          Email</a>
+        <button id="moreDetailsBtn" class="btn" title="See complete description"><i
+            class="fa-solid fa-rectangle-list"></i> More details</button>
+      </div>
+    </div>
+    <div id="projClose" title="Close">✕</div>
+  </div>
+
+  <!-- description modal -->
+  <div id="detailModalBackdrop" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"
+      style="width:min(920px,94vw);max-height:90vh;background:linear-gradient(180deg,#071827,#041526);border-radius:12px;padding:18px;overflow:auto;border:1px solid rgba(255,255,255,0.04);box-shadow:0 30px 120px rgba(0,0,0,0.7)">
+      <div class="modal-head" style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div style="display:flex;gap:12px;align-items:center">
+          <img id="modalImage" src="images/hasnain.jpeg" alt="Profile image"
+            style="width:56px;height:56px;border-radius:8px;object-fit:cover">
+          <div>
+            <div id="modalTitle" style="font-weight:800">Syed Hasnain Raza</div>
+            <div id="modalSubtitle" style="color:var(--muted);font-size:13px">""Your Vision, My Code."</div>
+          </div>
+        </div>
+        <div>
+          <button id="downloadVcardModal" class="btn primary" title="Download vCard"><i
+              class="fa-regular fa-address-card"></i> vCard</button>
+          <button id="closeModal" class="close-modal" title="Close modal"
+            style="background:rgba(255,255,255,0.03);border-radius:8px;padding:8px 12px;border:0;color:var(--text);cursor:pointer">Close</button>
+        </div>
+      </div>
+
+      <div class="modal-body" style="margin-top:12px">
+        <strong style="color:var(--muted)">Description</strong>
+        <p id="modalNotes" style="margin-top:8px;line-height:1.4">A visionary leader with a deep understanding of real estate dynamics,</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="tooltip" role="status" aria-live="polite"></div>
+  <div id="toast" class="toast" aria-live="polite" role="status"></div>
+  <footer class="note">Amaken Real Estate Brokers — 5D Interactive Info Cubes — Developed by <a
+      href="http://syedhasnain-portfolio.netlify.app/" style="color:#6fe8ff">Syed Hasnain Raza</a></footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.min.js"></script>
+
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js';
+
+    const DEFAULT_META = {
+      name: 'Syed Hasnain Raza',
+      company: 'Amaken Real Estate Brokers',
+      title: '"Your Vision, My Code',
+      phone: '+923161003996',
+      whatsapp: '+923161003996',
+      email: 'razahasnain0300@gmail.com',
+      website: 'http://syedhasnain-portfolio.netlify.app/',
+      address: 'Al Reem Tower 3rd Floor Office 1301 Dubai UAE',
+      notesShort: 'I am a passionate Web Developer and Electronic Engineer,',
+      notesFull: 'I am a passionate Web Developer and Electronic Engineer at Amaken Real Estate Brokers + NEXGEN Digital, where I combine technical expertise with creative problem-solving. My work spans full-stack web development, scalable backend systems, and modern UI/UX design. I specialize in delivering polished websites, real-time web applications, e-commerce stores, 3D web experiences, and digital business cards. Using technologies like PHP, Node.js, Laravel, MySQL, PostgreSQL, JavaScript, Python and Bootstrap, I create solutions that are both powerful and elegant.',
+      image: 'https://amaken-realestate.com/4.png'
+    };
+
+    // DOM refs
+    const wrap = document.getElementById('canvasWrap');
+    const mobileDetailBtn = document.getElementById('mobileDetailBtn');
+    const exportHiDPI = document.getElementById('exportHiDPI');
+    const downloadVcard = document.getElementById('downloadVcard');
+    const shapeCount = document.getElementById('shapeCount');
+    const shapeCountVal = document.getElementById('shapeCountVal');
+    const mergeToggle = document.getElementById('mergeToggle');
+    const particlesToggle = document.getElementById('particlesToggle');
+    const accent = document.getElementById('accent');
+    const themeToggle = document.getElementById('themeToggle');
+    const tooltipEl = document.getElementById('tooltip');
+    const toastEl = document.getElementById('toast');
+
+    const projectorOverlay = document.getElementById('projectorOverlay');
+    const projImage = document.getElementById('projImage');
+    const projName = document.getElementById('projName');
+    const projTitle = document.getElementById('projTitle');
+    const projText = document.getElementById('projText');
+    const projPhone = document.getElementById('projPhone');
+    const projWhatsapp = document.getElementById('projWhatsapp');
+    const projEmail = document.getElementById('projEmail');
+    const projWebsite = document.getElementById('projWebsite');
+    const projAddress = document.getElementById('projAddress');
+    const projClose = document.getElementById('projClose');
+
+    const iconPhone = document.getElementById('iconPhone');
+    const iconWa = document.getElementById('iconWa');
+    const iconMail = document.getElementById('iconMail');
+    const iconWeb = document.getElementById('iconWeb');
+    const iconMap = document.getElementById('iconMap');
+    const callBtn = document.getElementById('callBtn');
+    const waBtn = document.getElementById('waBtn');
+    const mailBtn = document.getElementById('mailBtn');
+    const moreDetailsBtn = document.getElementById('moreDetailsBtn');
+
+    const detailModalBackdrop = document.getElementById('detailModalBackdrop');
+    const modalImage = document.getElementById('modalImage');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalSubtitle = document.getElementById('modalSubtitle');
+    const modalNotes = document.getElementById('modalNotes');
+    const closeModalBtn = document.getElementById('closeModal');
+    const downloadVcardModal = document.getElementById('downloadVcardModal');
+
+    let tooltipHideTimer = null;
+    let currentMeta = DEFAULT_META;
+
+    function showToast(msg, ms = 2200) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      clearTimeout(toastEl._t);
+      toastEl._t = setTimeout(() => toastEl.classList.remove('show'), ms);
+    }
+
+    // THREE setup
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(wrap.clientWidth, wrap.clientHeight, false);
+    renderer.domElement.style.display = 'block';
+    wrap.appendChild(renderer.domElement);
+
+    const scene = new THREE.Scene();
+
+    // DOM video -> VideoTexture
+    const domVideo = document.getElementById('bgVideo');
+    try { domVideo.play().catch(() => { }); } catch (e) { }
+    let videoTexture = null;
+    if (domVideo) {
+      try {
+        videoTexture = new THREE.VideoTexture(domVideo);
+        videoTexture.minFilter = THREE.LinearFilter;
+        videoTexture.magFilter = THREE.LinearFilter;
+        videoTexture.format = THREE.RGBAFormat;
+      } catch (err) {
+        videoTexture = null;
+      }
+    }
+    const bgMaterial = videoTexture ? new THREE.MeshBasicMaterial({ map: videoTexture, toneMapped: false }) : new THREE.MeshBasicMaterial({ color: 0x071827 });
+    const bg = new THREE.Mesh(new THREE.PlaneGeometry(160, 90), bgMaterial);
+    bg.position.set(0, 0, -60);
+    scene.add(bg);
+
+    const camera = new THREE.PerspectiveCamera(45, wrap.clientWidth / wrap.clientHeight, 0.1, 1000);
+    camera.position.set(0, 0, 18);
+
+    const key = new THREE.DirectionalLight(0xffffff, 0.85); key.position.set(14, 18, 12); scene.add(key);
+    const rim = new THREE.DirectionalLight(0x9fefff, 0.22); rim.position.set(-12, -10, 8); scene.add(rim);
+    const ambient = new THREE.AmbientLight(0x6aa8bf, 0.14); scene.add(ambient);
+
+    // small floating cubes
+    let PARTICLE_COUNT = parseInt(shapeCount.value, 10) || 96;
+    const SMALL_CUBE_MIN = 0.08, SMALL_CUBE_MAX = 0.22;
+    let smallCubes = [];
+    const smallGroup = new THREE.Group(); scene.add(smallGroup);
+
+    function buildSmallCubes(count) {
+      smallGroup.children.slice().forEach(m => { smallGroup.remove(m); m.geometry?.dispose?.(); m.material?.dispose?.(); });
+      smallCubes = [];
+      for (let i = 0; i < count; i++) {
+        const s = SMALL_CUBE_MIN + Math.random() * (SMALL_CUBE_MAX - SMALL_CUBE_MIN);
+        const geom = new THREE.BoxGeometry(s, s, s);
+        const col = new THREE.Color().setHSL(0.55 + Math.random() * 0.2, 0.6, 0.5);
+        const mat = new THREE.MeshPhysicalMaterial({ color: col, transparent: true, opacity: 0.86, roughness: 0.24, metalness: 0.06, transmission: 0.22, clearcoat: 0.4 });
+        const m = new THREE.Mesh(geom, mat);
+        m.position.set((Math.random() - 0.5) * 20, (Math.random() - 0.5) * 12, (Math.random() - 0.5) * 18);
+        m.userData = { basePos: m.position.clone(), speed: 0.3 + Math.random() * 1.2, angle: Math.random() * Math.PI * 2, radius: 0.2 + Math.random() * 6, rotSpeed: (Math.random() * 0.02 - 0.01) };
+        smallGroup.add(m); smallCubes.push(m);
+      }
+    }
+    buildSmallCubes(PARTICLE_COUNT);
+
+    // particles
+    const pts = 240;
+    const particleGeo = new THREE.BufferGeometry();
+    const positions = new Float32Array(pts * 3);
+    for (let i = 0; i < pts; i++) {
+      positions[i * 3 + 0] = (Math.random() - 0.5) * 50;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 30;
+      positions[i * 3 + 2] = -5 - Math.random() * 40;
+    }
+    particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const particles = new THREE.Points(particleGeo, new THREE.PointsMaterial({ size: 0.06, transparent: true, opacity: 0.06 }));
+    scene.add(particles);
+
+    // info cubes & medium cube
+    const infoGroup = new THREE.Group(); scene.add(infoGroup);
+    const INFO_CUBE_COUNT = 12;
+    let infoCubes = [];
+    const INFO_TYPES = ['image', 'name', 'title', 'phone', 'email', 'website', 'address', 'notes'];
+
+    // helpers for canvas faces
+    function drawImageCover(ctx, img, x, y, w, h) {
+      const iw = img.naturalWidth || img.width;
+      const ih = img.naturalHeight || img.height;
+      if (!iw || !ih) { ctx.drawImage(img, x, y, w, h); return; }
+      const r = Math.max(w / iw, h / ih);
+      const nw = iw * r, nh = ih * r;
+      const cx = (nw - w) / 2, cy = (nh - h) / 2;
+      ctx.drawImage(img, -cx + x, -cy + y, nw, nh);
+    }
+
+    // canvas registry for face textures
+    const canvasRegistry = [];
+
+    function makeFaceCanvasForType(type, meta, size = 1024, loadedImage = null) {
+      const c = document.createElement('canvas'); c.width = size; c.height = size;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#071827'; ctx.fillRect(0, 0, size, size);
+
+      if (type === 'image') {
+        const pad = Math.floor(size * 0.06);
+        const imgSize = size - pad * 2;
+        ctx.fillStyle = '#0b2533';
+        roundRect(ctx, pad, pad, imgSize, imgSize, 18, true, false);
+
+        if (loadedImage) {
+          try { drawImageCover(ctx, loadedImage, pad, pad, imgSize, imgSize); } catch (e) {
+            ctx.fillStyle = '#eaf6ff'; ctx.font = '700 44px Inter, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('Photo', size / 2, size / 2 + 18);
+          }
+        } else {
+          ctx.fillStyle = '#eaf6ff'; ctx.font = '700 44px Inter, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('Loading…', size / 2, size / 2 + 18);
+        }
+      } else {
+        ctx.fillStyle = '#eaf6ff';
+        if (type === 'name') { ctx.font = '800 64px Inter, sans-serif'; ctx.textAlign = 'center'; wrapText(ctx, meta.name || '', size / 2, size / 2, size - 120, 70); }
+        else if (type === 'title') { ctx.font = '700 28px Inter, sans-serif'; ctx.textAlign = 'center'; wrapText(ctx, meta.title || '', size / 2, size / 2, size - 120, 36); }
+        else if (type === 'phone') { ctx.font = '700 36px Inter, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(meta.phone || '', size / 2, size / 2); }
+        else if (type === 'email') { ctx.font = '600 28px Inter, sans-serif'; ctx.textAlign = 'center'; wrapText(ctx, meta.email || '', size / 2, size / 2, size - 120, 34); }
+        else if (type === 'website') { ctx.font = '600 28px Inter, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(meta.website || '', size / 2, size / 2); }
+        else if (type === 'address') { ctx.font = '600 24px Inter, sans-serif'; ctx.textAlign = 'center'; wrapText(ctx, meta.address || '', size / 2, size / 2, size - 120, 30); }
+        else if (type === 'notes') { ctx.font = '600 24px Inter, sans-serif'; ctx.textAlign = 'center'; wrapText(ctx, meta.notesShort || '', size / 2, size / 2, size - 120, 30); }
+      }
+      return c;
+    }
+
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = (text || '').split(' ');
+      let line = '';
+      let estLines = Math.ceil((text || '').length / (maxWidth / 12));
+      if (estLines < 1) estLines = 1;
+      let testY = y - (lineHeight * (estLines / 2));
+      for (let n = 0; n < words.length; n++) {
+        const testLine = line + words[n] + ' ';
+        const metrics = ctx.measureText(testLine);
+        const testWidth = metrics.width;
+        if (testWidth > maxWidth && n > 0) {
+          ctx.fillText(line, x, testY);
+          line = words[n] + ' ';
+          testY += lineHeight;
+        } else {
+          line = testLine;
+        }
+      }
+      ctx.fillText(line, x, testY);
+    }
+
+    function buildInfoCubes(count, loadedImage = null) {
+      infoGroup.children.slice().forEach(m => { infoGroup.remove(m); m.geometry?.dispose?.(); if (m.material) { if (Array.isArray(m.material)) m.material.forEach(mat => mat.map?.dispose?.()); else m.material.map?.dispose?.(); } });
+      infoCubes = [];
+      const size = 1.4;
+      for (let i = 0; i < count; i++) {
+        const type = INFO_TYPES[i % INFO_TYPES.length];
+        const meta = Object.assign({}, DEFAULT_META);
+        const faceCanvas = makeFaceCanvasForType(type, meta, 1024, loadedImage && type === 'image' ? loadedImage : null);
+        const tex = new THREE.CanvasTexture(faceCanvas);
+        tex.minFilter = THREE.LinearFilter; tex.encoding = THREE.sRGBEncoding;
+        faceCanvas._textures = faceCanvas._textures || []; faceCanvas._textures.push(tex);
+        canvasRegistry.push({ canvas: faceCanvas, texture: tex, type });
+
+        const materials = [];
+        for (let f = 0; f < 6; f++) materials.push(new THREE.MeshPhysicalMaterial({ map: tex, transparent: true, roughness: 0.25, metalness: 0.02, side: THREE.DoubleSide }));
+        const geom = new THREE.BoxGeometry(size, size, size);
+        const mesh = new THREE.Mesh(geom, materials);
+        const spread = BIG_CUBE_SIZE * 0.45;
+        mesh.position.set((Math.random() - 0.5) * spread, (Math.random() - 0.5) * spread, (Math.random() - 0.5) * spread);
+        mesh.userData = { meta: { type, ...meta }, basePos: mesh.position.clone(), rotSpeed: (Math.random() * 0.01 - 0.005) };
+        infoGroup.add(mesh); infoCubes.push(mesh);
+      }
+    }
+
+    // MEDIUM CUBE: create from DOM <img id="cubeImage">
+    let mediumCube = null;
+
+    function disposeMeshAndTextures(mesh) {
+      if (!mesh) return;
+      try { scene.remove(mesh); } catch (e) { }
+      try { mesh.geometry?.dispose(); } catch (e) { }
+      if (!mesh.material) return;
+      if (Array.isArray(mesh.material)) {
+        mesh.material.forEach(mat => { try { mat.map?.dispose(); } catch (e) { }; try { mat.dispose?.(); } catch (e) { }; });
+      } else {
+        try { mesh.material.map?.dispose(); } catch (e) { }; try { mesh.material.dispose?.(); } catch (e) { }
+      }
+    }
+
+    function createFallbackCanvasTexture(size = 2048) {
+      const c = document.createElement('canvas'); c.width = c.height = size;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#071827'; ctx.fillRect(0, 0, size, size);
+      const pad = Math.floor(size * 0.06);
+      const imgSize = size - pad * 2;
+      ctx.fillStyle = '#0b2533'; roundRect(ctx, pad, pad, imgSize, imgSize, 18, true, false);
+      ctx.fillStyle = '#eaf6ff'; ctx.font = '700 64px Inter, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('Amaken', size / 2, size / 2 + 22);
+      const tex = new THREE.CanvasTexture(c);
+      tex.encoding = THREE.sRGBEncoding; tex.needsUpdate = true;
+      return tex;
+    }
+
+    function buildMediumCubeFromImgElement() {
+      if (mediumCube) { disposeMeshAndTextures(mediumCube); mediumCube = null; }
+
+      const imgEl = document.getElementById('cubeImage');
+
+      function createMeshWithImage(img) {
+        const tex = new THREE.Texture(img);
+        tex.minFilter = THREE.LinearFilter;
+        tex.encoding = THREE.sRGBEncoding;
+        tex.needsUpdate = true;
+
+        const mats = [];
+        for (let f = 0; f < 6; f++) mats.push(new THREE.MeshPhysicalMaterial({ map: tex, roughness: 0.35, metalness: 0.04 }));
+
+        const geom = new THREE.BoxGeometry(3.2, 3.2, 3.2);
+        mediumCube = new THREE.Mesh(geom, mats);
+        mediumCube.position.set(0, 0, 0);
+        mediumCube.userData = { meta: { ...DEFAULT_META }, basePos: mediumCube.position.clone(), rotSpeed: 0.001, orbitSpeed: 0.02, bobSpeed: 0.6, bobHeight: 0.12, radius: 0.12, zAmp: 0.08, angle: Math.random() * Math.PI * 2 };
+        if (renderer && renderer.outputEncoding !== THREE.sRGBEncoding) renderer.outputEncoding = THREE.sRGBEncoding;
+        scene.add(mediumCube);
+      }
+
+      if (!imgEl) {
+        const fallback = createFallbackCanvasTexture(2048);
+        const mats = Array.from({ length: 6 }, () => new THREE.MeshPhysicalMaterial({ map: fallback, roughness: 0.35, metalness: 0.04 }));
+        mediumCube = new THREE.Mesh(new THREE.BoxGeometry(3.2, 3.2, 3.2), mats);
+        mediumCube.position.set(0, 0, 0); scene.add(mediumCube); return;
+      }
+
+      if (imgEl.complete && imgEl.naturalWidth) { createMeshWithImage(imgEl); return; }
+
+      const onLoad = () => { createMeshWithImage(imgEl); cleanup(); };
+      const onError = (err) => {
+        console.warn('cube image failed to load — using fallback', err);
+        const fallback = createFallbackCanvasTexture(2048);
+        const mats = Array.from({ length: 6 }, () => new THREE.MeshPhysicalMaterial({ map: fallback, roughness: 0.35, metalness: 0.04 }));
+        mediumCube = new THREE.Mesh(new THREE.BoxGeometry(3.2, 3.2, 3.2), mats);
+        mediumCube.position.set(0, 0, 0); scene.add(mediumCube); cleanup();
+      };
+      function cleanup() { imgEl.removeEventListener('load', onLoad); imgEl.removeEventListener('error', onError); }
+      imgEl.addEventListener('load', onLoad);
+      imgEl.addEventListener('error', onError);
+    }
+
+    const BIG_CUBE_SIZE = 8.2;
+    const edges = new THREE.EdgesGeometry(new THREE.BoxGeometry(BIG_CUBE_SIZE, BIG_CUBE_SIZE, BIG_CUBE_SIZE));
+    const boundary = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x9fefff, transparent: true, opacity: 0.08 }));
+    scene.add(boundary);
+
+    // build cubes
+    buildInfoCubes(INFO_CUBE_COUNT);
+    buildMediumCubeFromImgElement();
+
+    // robust image loader for canvases (keeps old canvas-face update behavior)
+    async function loadImage(src) {
+      if (!src) throw new Error('no src');
+      try {
+        const resp = await fetch(src, { mode: 'cors' });
+        if (!resp.ok) throw new Error('fetch failed: ' + resp.status);
+        const blob = await resp.blob();
+        const bitmap = await createImageBitmap(blob);
+        return bitmap;
+      } catch (err) {
+        return await new Promise((resolve, reject) => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => resolve(img);
+          img.onerror = (e) => reject(e);
+          img.src = src;
+        });
+      }
+    }
+
+    async function loadAndApplyImageOnce(src) {
+      try {
+        const loaded = await loadImage(src);
+        let updated = 0;
+        canvasRegistry.forEach(entry => {
+          if (entry.type === 'image' && entry.canvas && entry.texture) {
+            const c = entry.canvas;
+            const ctx = c.getContext('2d');
+            const size = c.width;
+            const pad = Math.floor(size * 0.06);
+            const imgSize = size - pad * 2;
+            ctx.fillStyle = '#071827'; ctx.fillRect(0, 0, size, size);
+            ctx.fillStyle = '#0b2533'; roundRect(ctx, pad, pad, imgSize, imgSize, 18, true, false);
+            try { drawImageCover(ctx, loaded, pad, pad, imgSize, imgSize); } catch (e) { try { ctx.drawImage(loaded, pad, pad, imgSize, imgSize); } catch (ee) { console.warn('draw fallback failed', ee); } }
+            entry.texture.needsUpdate = true;
+            updated++;
+          }
+        });
+        if (updated) showToast(`Image applied to ${updated} face canvases`);
+        // if medium cube missing, rebuild (attempt)
+        if (!mediumCube && loaded) {
+          if (loaded instanceof ImageBitmap) {
+            const tmp = document.createElement('canvas'); tmp.width = loaded.width; tmp.height = loaded.height;
+            const ctx = tmp.getContext('2d'); ctx.drawImage(loaded, 0, 0);
+            const img = new Image();
+            img.onload = () => {
+              const domImg = document.getElementById('cubeImage');
+              if (domImg) domImg.remove();
+              img.id = 'cubeImage'; img.crossOrigin = 'anonymous'; img.style.display = 'none';
+              document.body.insertBefore(img, document.body.firstChild);
+              buildMediumCubeFromImgElement();
+            };
+            img.onerror = () => { buildMediumCubeFromImgElement(); };
+            img.src = tmp.toDataURL();
+          } else {
+            // loaded is HTMLImageElement
+            const domImg = document.getElementById('cubeImage');
+            if (!domImg) {
+              loaded.id = 'cubeImage'; loaded.style.display = 'none'; loaded.crossOrigin = 'anonymous';
+              document.body.insertBefore(loaded, document.body.firstChild);
+            }
+            buildMediumCubeFromImgElement();
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load/apply image', err);
+        showToast('Couldn’t load image — check console (CORS / file://).');
+      }
+    }
+
+    loadAndApplyImageOnce(DEFAULT_META.image).catch(() => { });
+
+    function roundRect(ctx, x, y, w, h, r, fill, stroke) { if (typeof r === 'undefined') r = 5; ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); if (fill) ctx.fill(); if (stroke) ctx.stroke(); }
+    function inlinePlaceholder() { return 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="900"><rect width="100%" height="100%" fill="#071827"/></svg>`); }
+
+    // Raycasting & interaction (kept behavior)
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+    function setPointer(e) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    }
+
+    function escapeHtml(str) { if (str === undefined || str === null) return ''; return String(str).replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[s]); }
+
+    function showMetaTooltip(e, meta) {
+      if (!meta) return;
+      const t = tooltipEl;
+      t.innerHTML = `<span class="t-name">${escapeHtml(meta.name)}</span><span class="t-title">${escapeHtml(meta.title)}</span>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div><strong style="color:var(--muted);min-width:72px">Phone:</strong> ${escapeHtml(meta.phone)}</div>
+          <div><strong style="color:var(--muted);min-width:72px">Email:</strong> ${escapeHtml(meta.email)}</div>
+          <div><strong style="color:var(--muted);min-width:72px">Website:</strong> ${escapeHtml(meta.website)}</div>
+        </div>`;
+      const offsetX = 12, offsetY = 12;
+      t.style.display = 'block'; t.style.visibility = 'hidden';
+      const bw = t.offsetWidth, bh = t.offsetHeight;
+      t.style.visibility = '';
+      let left = e.clientX + offsetX, top = e.clientY + offsetY;
+      const vw = window.innerWidth, vh = window.innerHeight, pad = 10;
+      if (left + bw + pad > vw) left = e.clientX - bw - offsetX;
+      if (top + bh + pad > vh) top = e.clientY - bh - offsetY;
+      t.style.left = `${Math.max(pad, left)}px`; t.style.top = `${Math.max(pad, top)}px`;
+      clearTimeout(tooltipHideTimer);
+    }
+    function hideMetaTooltip(ms = 120) { clearTimeout(tooltipHideTimer); tooltipHideTimer = setTimeout(() => { tooltipEl.style.display = 'none'; }, ms); }
+
+    let lastHoveredMesh = null;
+    let hoverOpenTimer = null;
+    let hoverCloseTimer = null;
+    let overlayOpenedByHover = false;
+
+    function handlePointerMove(e) {
+      setPointer(e);
+      raycaster.setFromCamera(pointer, camera);
+      const intersects = raycaster.intersectObjects([...infoCubes, mediumCube].filter(Boolean), true);
+
+      if (intersects.length) {
+        const mesh = intersects[0].object;
+        const meta = (mesh.userData && mesh.userData.meta) ? mesh.userData.meta : DEFAULT_META;
+
+        showMetaTooltip(e, meta);
+        mesh.scale.set(1.06, 1.06, 1.06);
+        infoCubes.forEach(m => { if (m !== mesh) m.scale.set(1, 1, 1); });
+        if (mediumCube && mediumCube !== mesh) mediumCube.scale.set(1, 1, 1);
+
+        if (lastHoveredMesh !== mesh) {
+          clearTimeout(hoverOpenTimer);
+          hoverOpenTimer = setTimeout(() => {
+            if (!projectorOverlay.classList.contains('show')) {
+              overlayOpenedByHover = true;
+              openOverlayFor(meta);
+            } else {
+              if (!overlayOpenedByHover) { openOverlayFor(meta); overlayOpenedByHover = false; } else openOverlayFor(meta);
+            }
+          }, 700);
+        }
+        clearTimeout(hoverCloseTimer);
+        lastHoveredMesh = mesh;
+      } else {
+        clearTimeout(hoverOpenTimer);
+        if (overlayOpenedByHover) {
+          clearTimeout(hoverCloseTimer);
+          hoverCloseTimer = setTimeout(() => { closeOverlay(); overlayOpenedByHover = false; }, 900);
+        }
+        lastHoveredMesh = null;
+        hideMetaTooltip();
+        infoCubes.forEach(m => m.scale.set(1, 1, 1));
+        if (mediumCube) mediumCube.scale.set(1, 1, 1);
+      }
+    }
+    window.addEventListener('pointermove', handlePointerMove);
+
+    projectorOverlay.addEventListener('mouseenter', () => { clearTimeout(hoverCloseTimer); });
+    projectorOverlay.addEventListener('mouseleave', () => { if (overlayOpenedByHover) { clearTimeout(hoverCloseTimer); hoverCloseTimer = setTimeout(() => { closeOverlay(); overlayOpenedByHover = false; }, 800); } });
+
+    window.addEventListener('click', ev => {
+      setPointer(ev);
+      raycaster.setFromCamera(pointer, camera);
+      const hits = raycaster.intersectObjects([...infoCubes, mediumCube].filter(Boolean), true);
+      if (hits.length) {
+        overlayOpenedByHover = false;
+        openOverlayFor(hits[0].object.userData.meta || DEFAULT_META);
+      }
+    });
+
+    function openOverlayFor(meta) {
+      const data = meta || DEFAULT_META;
+      currentMeta = data;
+      projName.textContent = data.name || DEFAULT_META.name;
+      projTitle.textContent = data.title || DEFAULT_META.title;
+      projText.textContent = data.notesShort || data.notesFull || '';
+      projPhone.textContent = data.phone || DEFAULT_META.phone;
+      projWhatsapp.textContent = data.whatsapp || DEFAULT_META.whatsapp;
+      projEmail.textContent = data.email || DEFAULT_META.email;
+      projWebsite.textContent = data.website || DEFAULT_META.website;
+      projAddress.textContent = data.address || DEFAULT_META.address;
+      projImage.src = data.image || inlinePlaceholder();
+
+      callBtn.href = `tel:${(data.phone || DEFAULT_META.phone).replace(/\D/g, '')}`;
+      waBtn.href = `https://wa.me/${((data.whatsapp || data.phone || DEFAULT_META.phone).replace(/\D/g, ''))}`;
+      mailBtn.href = `mailto:${data.email || DEFAULT_META.email}`;
+      if (iconWeb) iconWeb.setAttribute('href', data.website || DEFAULT_META.website);
+
+      projectorOverlay.classList.add('show');
+      projectorOverlay.setAttribute('aria-hidden', 'false');
+      showToast('Profile opened');
+    }
+    function closeOverlay() { projectorOverlay.classList.remove('show'); projectorOverlay.setAttribute('aria-hidden', 'true'); }
+    projClose.addEventListener('click', () => { overlayOpenedByHover = false; closeOverlay(); });
+    window.addEventListener('keydown', (e) => { if (e.key === 'Escape') { overlayOpenedByHover = false; closeOverlay(); } });
+
+    // icon interactions
+    function showSmallTooltip(node, text) {
+      const t = tooltipEl; t.innerHTML = `<div style="font-weight:700;margin-bottom:6px">${escapeHtml(text)}</div>`;
+      t.style.display = 'block'; t.style.visibility = 'hidden';
+      const bw = t.offsetWidth, bh = t.offsetHeight; t.style.visibility = '';
+      const rect = node.getBoundingClientRect();
+      let left = rect.right + 8, top = rect.top + (rect.height - bh) / 2;
+      if (left + bw > window.innerWidth) left = rect.left - bw - 8;
+      if (top + bh > window.innerHeight) top = window.innerHeight - bh - 8;
+      t.style.left = `${Math.max(8, left)}px`; t.style.top = `${Math.max(8, top)}px`; clearTimeout(tooltipHideTimer);
+    }
+    function hideSmallTooltip(ms = 80) { clearTimeout(tooltipHideTimer); tooltipHideTimer = setTimeout(() => { tooltipEl.style.display = 'none'; }, ms); }
+    async function copyToClipboard(text) { try { await navigator.clipboard.writeText(text); showToast('Copied to clipboard'); } catch (e) { showToast('Copy failed'); } }
+
+    function attachIconInteractions() {
+      if (iconPhone) {
+        iconPhone.addEventListener('mouseenter', () => showSmallTooltip(iconPhone, DEFAULT_META.phone));
+        iconPhone.addEventListener('mouseleave', () => hideSmallTooltip());
+        iconPhone.addEventListener('click', () => { window.location.href = `tel:${DEFAULT_META.phone.replace(/\D/g, '')}`; copyToClipboard(DEFAULT_META.phone); });
+      }
+      if (iconWa) {
+        iconWa.addEventListener('mouseenter', () => showSmallTooltip(iconWa, DEFAULT_META.whatsapp));
+        iconWa.addEventListener('mouseleave', () => hideSmallTooltip());
+        iconWa.addEventListener('click', () => { window.open(`https://wa.me/${DEFAULT_META.whatsapp.replace(/\D/g, '')}`, '_blank'); copyToClipboard(DEFAULT_META.whatsapp); });
+      }
+      if (iconMail) {
+        iconMail.addEventListener('mouseenter', () => showSmallTooltip(iconMail, DEFAULT_META.email));
+        iconMail.addEventListener('mouseleave', () => hideSmallTooltip());
+        iconMail.addEventListener('click', () => { window.location.href = `mailto:${DEFAULT_META.email}`; copyToClipboard(DEFAULT_META.email); });
+      }
+      if (iconWeb) {
+        iconWeb.addEventListener('mouseenter', () => showSmallTooltip(iconWeb, DEFAULT_META.website));
+        iconWeb.addEventListener('mouseleave', () => hideSmallTooltip());
+        iconWeb.addEventListener('click', (e) => { e.preventDefault(); window.open(DEFAULT_META.website, '_blank'); copyToClipboard(DEFAULT_META.website); });
+      }
+      if (iconMap) {
+        iconMap.addEventListener('mouseenter', () => showSmallTooltip(iconMap, DEFAULT_META.address));
+        iconMap.addEventListener('mouseleave', () => hideSmallTooltip());
+        iconMap.addEventListener('click', () => { const q = encodeURIComponent(DEFAULT_META.address); window.open(`https://www.google.com/maps/search/?api=1&query=${q}`, '_blank'); copyToClipboard(DEFAULT_META.address); });
+      }
+    }
+    attachIconInteractions();
+
+    mobileDetailBtn.addEventListener('click', () => { overlayOpenedByHover = false; openOverlayFor(DEFAULT_META); });
+
+    (function wireTable() {
+      const table = document.getElementById('profilesTable');
+      if (!table) return;
+      const headers = Array.from(table.querySelectorAll('thead th')).map(h => h.textContent.trim());
+      Array.from(table.querySelectorAll('tbody tr')).forEach(row => {
+        Array.from(row.querySelectorAll('td')).forEach((td, i) => td.setAttribute('data-label', headers[i] || ''));
+      });
+      table.querySelectorAll('a.btn[data-view]').forEach(btn => {
+        btn.addEventListener('click', (e) => { e.preventDefault(); overlayOpenedByHover = false; openOverlayFor(DEFAULT_META); });
+      });
+    })();
+
+    function openModal(meta) {
+      const data = meta || DEFAULT_META;
+      modalImage.src = data.image || inlinePlaceholder();
+      modalTitle.textContent = data.name || DEFAULT_META.name;
+      modalSubtitle.textContent = data.title || DEFAULT_META.title;
+      modalNotes.textContent = data.notesFull || DEFAULT_META.notesFull || DEFAULT_META.notesShort;
+      detailModalBackdrop.style.display = 'flex';
+      detailModalBackdrop.setAttribute('aria-hidden', 'false');
+      showToast('Opened description');
+    }
+    function closeModal() { detailModalBackdrop.style.display = 'none'; detailModalBackdrop.setAttribute('aria-hidden', 'true'); }
+    closeModalBtn && closeModalBtn.addEventListener && closeModalBtn.addEventListener('click', closeModal);
+    detailModalBackdrop && detailModalBackdrop.addEventListener && detailModalBackdrop.addEventListener('click', (e) => { if (e.target === detailModalBackdrop) closeModal(); });
+
+    moreDetailsBtn && moreDetailsBtn.addEventListener && moreDetailsBtn.addEventListener('click', (e) => { e.stopPropagation(); openModal(currentMeta); });
+    moreDetailsBtn && moreDetailsBtn.addEventListener && moreDetailsBtn.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); openModal(currentMeta); } });
+
+    // animation
+    function animate() {
+      const now = performance.now();
+      if (particlesToggle && particlesToggle.checked) {
+        const arr = particleGeo.attributes.position.array;
+        for (let i = 0; i < arr.length; i++) arr[i] += Math.sin((now * 0.0003) + i) * 0.00025;
+        particleGeo.attributes.position.needsUpdate = true;
+        particles.visible = true;
+      } else particles.visible = false;
+
+      smallCubes.forEach(c => {
+        const d = c.userData;
+        c.rotation.x += d.rotSpeed * 0.9;
+        c.rotation.y += d.rotSpeed * 1.1;
+        c.position.x = d.basePos.x + Math.cos((now * 0.001) * d.speed + d.angle) * d.radius * 0.9;
+        c.position.y = d.basePos.y + Math.sin((now * 0.001) * (d.speed * 0.8) + d.angle * 0.5) * (d.radius * 0.6);
+      });
+
+      infoCubes.forEach((m, idx) => {
+        const d = m.userData;
+        m.rotation.x += d.rotSpeed * 0.8;
+        m.rotation.y += d.rotSpeed * 0.9;
+        m.position.x = d.basePos.x + Math.sin(now * 0.0004 + idx) * 0.18;
+        m.position.y = d.basePos.y + Math.cos(now * 0.0006 + idx * 1.2) * 0.14;
+        m.position.z = d.basePos.z + Math.sin(now * 0.0005 + idx * 0.4) * 0.12;
+      });
+
+      if (mediumCube) {
+        const md = mediumCube.userData;
+        mediumCube.rotation.x += md.rotSpeed * 0.6;
+        mediumCube.rotation.y += md.rotSpeed * 0.8;
+        const t = now * 0.001;
+        const angle = t * md.orbitSpeed + (md.angle || 0);
+        mediumCube.position.x = Math.cos(angle) * md.radius;
+        mediumCube.position.y = Math.sin(t * md.bobSpeed + ((md.angle || 0) * 0.5)) * md.bobHeight;
+        mediumCube.position.z = Math.sin(angle * 0.5) * md.zAmp;
+      }
+
+      boundary.rotation.y += 0.0012;
+      boundary.rotation.x += 0.0006;
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+    requestAnimationFrame(animate);
+
+    // controls wiring
+    shapeCountVal.textContent = shapeCount.value;
+    shapeCount.addEventListener('input', e => shapeCountVal.textContent = e.target.value);
+    shapeCount.addEventListener('change', e => { PARTICLE_COUNT = parseInt(e.target.value, 10); buildSmallCubes(PARTICLE_COUNT); });
+
+    mergeToggle && mergeToggle.addEventListener && mergeToggle.addEventListener('change', e => { if (e.target.checked) showToast('Auto-merge enabled'); else showToast('Auto-merge disabled'); });
+    particlesToggle && particlesToggle.addEventListener && particlesToggle.addEventListener('change', e => particles.visible = e.target.checked);
+
+    accent.addEventListener('input', e => { document.documentElement.style.setProperty('--accent', e.target.value || '#00bcd4'); buildInfoCubes(INFO_CUBE_COUNT); buildMediumCubeFromImgElement(); });
+
+    let lightMode = false;
+    function updateThemeUI() { themeToggle.setAttribute('aria-pressed', lightMode ? 'true' : 'false'); themeToggle.textContent = lightMode ? 'Switch to Dark' : 'Switch to Light'; }
+    themeToggle.addEventListener('click', () => { lightMode = !lightMode; updateThemeUI(); if (lightMode) { document.documentElement.style.setProperty('--bg', '#f6fbff'); document.documentElement.style.setProperty('--text', '#08325a'); document.documentElement.style.setProperty('--muted', '#6c7b84'); document.body.style.background = getComputedStyle(document.documentElement).getPropertyValue('--bg'); } else { document.documentElement.style.setProperty('--bg', '#071623'); document.documentElement.style.setProperty('--text', '#eaf6ff'); document.documentElement.style.setProperty('--muted', '#9fc9dd'); document.body.style.background = getComputedStyle(document.documentElement).getPropertyValue('--bg'); } });
+    updateThemeUI();
+
+    // vCard
+    function buildVCardString(meta = DEFAULT_META) {
+      const lines = ['BEGIN:VCARD', 'VERSION:3.0', `FN:${meta.name}`, `TITLE:${meta.title}`, `ORG:${meta.company}`, `TEL;TYPE=WORK,VOICE:${meta.phone}`, `EMAIL;TYPE=PREF,INTERNET:${meta.email}`, `URL:${meta.website}`, `ADR;TYPE=WORK:;;${meta.address};;;;`, `NOTE:${meta.notesFull || meta.notesShort || ''}`, 'END:VCARD'];
+      return lines.join('\r\n');
+    }
+    function downloadVCard(meta = DEFAULT_META) {
+      const vcf = buildVCardString(meta);
+      const blob = new Blob([vcf], { type: 'text/vcard' });
+      const filename = `${(meta.name || 'contact').replace(/\s+/g, '_')}.vcf`;
+      try {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
+        showToast('vCard downloaded');
+      } catch (e) { showToast('vCard failed'); }
+    }
+    downloadVcard.addEventListener('click', () => downloadVCard(DEFAULT_META));
+    downloadVcardModal && downloadVcardModal.addEventListener && downloadVcardModal.addEventListener('click', () => downloadVCard(DEFAULT_META));
+
+    // hi-dpi export
+    exportHiDPI.addEventListener('click', () => {
+      const oldPR = renderer.getPixelRatio();
+      const w = renderer.domElement.width;
+      const h = renderer.domElement.height;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2) * 2);
+      renderer.setSize(w / oldPR * renderer.getPixelRatio(), h / oldPR * renderer.getPixelRatio(), false);
+      renderer.render(scene, camera);
+      try {
+        const data = renderer.domElement.toDataURL('image/png');
+        const a = document.createElement('a'); a.href = data; a.download = `${(DEFAULT_META.name || 'profile').replace(/\s+/g, '_')}_cube@2x.png`;
+        document.body.appendChild(a); a.click(); a.remove();
+        showToast('PNG exported');
+      } finally {
+        renderer.setPixelRatio(oldPR);
+        renderer.setSize(w / oldPR * oldPR, h / oldPR * oldPR, false);
+      }
+    });
+
+    // resize handling
+    function resize() { renderer.setSize(wrap.clientWidth, wrap.clientHeight, false); camera.aspect = wrap.clientWidth / wrap.clientHeight; camera.updateProjectionMatrix(); }
+    window.addEventListener('resize', () => { clearTimeout(window._resize_t); window._resize_t = setTimeout(resize, 80); });
+    resize();
+  </script>
+</body>
+
+</html>
